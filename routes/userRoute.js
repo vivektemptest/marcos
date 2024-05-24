@@ -3,7 +3,7 @@ const { allUser,createUser,updateUser, deleteUser, getUserById } = require('../c
 const router = require('express').Router();
 const { validateUser } = require('../validators/userValidator');
 router.get('/',allUser);
-router.post('/',createUser,validateUser);
+router.post('/',validateUser,createUser);
 router.put('/:id',updateUser);
 router.delete('/:id',deleteUser)
 router.get('/:id',getUserById)
