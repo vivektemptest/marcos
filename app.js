@@ -1,40 +1,25 @@
-require("dotenv").config({ path: `${process.cwd()}/.env` });
 const express = require("express");
+const bodyParser = require("body-parser");
+const dotenv = require("dotenv");
+const connectDB = require('./config/db');
+
+
+const userRoutes = require('./routes/userRoute');
+
+
+dotenv.config();
+
 const app = express();
-const mongoose = require("mongoose");
-mongoose
-  .connect(
-    "mongodb+srv://vivektemptest:wGG62CicX1IGDwBn@macros.bpdde9f.mongodb.net/?retryWrites=true&w=majority&appName=macros"
-  )
-  .then(() => app.listen(5000, () => console.log("connected database")))
-  .catch((err) => console.log(err));
 
-//routes
+// Middleware
 app.use(express.json());
-const authRoute = require("./routes/authRoute");
-const userRoute = require("./routes/userRoute");
-app.get("/", (request, response) => {
-  response.status(200).json({
-    status: "success",
-    message: "hello",
-  });
-});
 
-//all routes here
-app.use("/api/v1/auth", authRoute);
+// Database Connection
+connectDB();
 
-//users routes
-app.use("/users", userRoute);
+// Routes
+app.use("/api/users", userRoutes);
 
-//route not found
-app.use("*", (request, response, next) => {
-  response.status(404).json({
-    status: false,
-    message: "Route not found",
-  });
-});
-
-const PORT = process.env.APP_PORT || 3000;
-app.listen(PORT, function () {
-  console.log("server running");
-});
+// Server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,19 +1,21 @@
-const { body } = require('express-validator');
+const { check, validationResult } = require('express-validator');
+const userService = require('../services/userService');
 
-const validateUser = [
-  body('name')
-    .notEmpty()
-    .withMessage('Name is required')
-    .isLength({ min: 3 })
-    .withMessage('Name must be at least 3 characters long'),
-  body('email')
-    .isEmail()
-    .withMessage('Must be a valid email'),
-  body('password')
-    .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters long')
+exports.validateUser = [
+  check('name', 'Name is required').not().isEmpty(),
+  check('email', 'Please include a valid email').isEmail(),
+  check('password', 'Password must be 6 or more characters').isLength({ min: 6 }),
+  check('email').custom(async (email) => {
+    const user = await userService.findUserByEmail(email);
+    if (user) {
+      throw new Error('User already exists');
+    }
+  }),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  }
 ];
-
-module.exports = {
-  validateUser
-};

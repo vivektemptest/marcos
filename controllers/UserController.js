@@ -1,95 +1,36 @@
-const User = require("../models/User");
-const { validationResult } = require("express-validator");
-const allUser = async (req, res, next) => {
-  let users;
-  try {
-    users = await User.find();
-  } catch (error) {
-    return next(error);
-  }
-  if (!users) {
-    return res.status(500).json({
-      message: "Internal server error",
-    });
-  }
-  return res.status(200).json(users);
-};
+const userService = require("../services/userService");
+const bcrypt = require('bcryptjs');
 
-const createUser = async (req, res) => {
-  // Check for validation errors from express-validator
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array()[0].msg });
-  }
-
-  // Try to create and save the user
+exports.getUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    const user = new User({ name, email, password });
-    await user.save();
-    res.status(201).json({ message: "User registered successfully" });
+    const user = await userService.findUserById(req.user.id);
+    res.json(user);
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    console.error(err.message);
+    res.status(500).send("Server Error");
   }
 };
 
-const updateUser = async (req, res, next) => {
-  const id = req.params.id;
-  const { name, email, password, status } = req.body;
-  if (!name && !email && !password) {
-    return res.status(422).json({
-      message: "invalid data",
-    });
-  }
-  let user;
-  try {
-    user = await User.findByIdAndUpdate(id, { name, email, password, status });
-  } catch (error) {
-    return next(error);
-  }
-  if (!user) {
-    return res.status(500).json({
-      message: "internal server error",
-    });
-  }
-  return res.status(200).json({ message: "updated successfully" });
-};
+exports.register = async (req, res, next) => {
+  const { name, email, password } = req.body;
 
-const deleteUser = async (req, res, next) => {
-  const id = req.params.id;
-  let user;
   try {
-    user = await User.findByIdAndDelete(id);
-  } catch (error) {
-    return next(error);
-  }
-  if (!user) {
-    return res.status(500).json({
-      message: "internal server error",
-    });
-  }
-  return res.status(200).json({ message: "successfully deleted" });
-};
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-const getUserById = async (req, res, next) => {
-  const id = req.params.id;
-  let user;
-  try {
-    user = await User.findById(id);
-  } catch (error) {
-    return next(error);
-  }
-  if (!user) {
-    return res.status(500).json({
-      message: "internal server error",
+    const user = await userService.createUser({
+      name,
+      email,
+      password: hashedPassword,
     });
+    if (!user) {
+      return res
+        .status(500)
+        .json({ success: false, message: "internal server error" });
+    }
+    return res.status(200).json({ user });
+  } catch (error) {
+    res.status(500).send(error);
+    console.log(error)
   }
-  return res.status(200).json(user);
-};
-module.exports = {
-  allUser,
-  createUser,
-  updateUser,
-  deleteUser,
-  getUserById,
 };
