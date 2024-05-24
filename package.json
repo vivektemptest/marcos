@@ -2,7 +2,7 @@
   "name": "marcos",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "start:dev": "nodemon app.js"
   },
@@ -11,7 +11,10 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "express-validator": "^7.1.0",
+    "mongodb": "^6.6.2",
+    "mongoose": "^8.4.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
